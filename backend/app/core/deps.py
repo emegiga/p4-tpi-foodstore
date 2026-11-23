@@ -1,45 +1,11 @@
-"""
-Dependencias de autenticación y autorización para FastAPI.
-
-Este módulo define funciones que se inyectan con Depends() para:
-- Extraer el token JWT desde el request
-- Validar autenticación
-- Validar estado del usuario
-- Validar permisos (roles)
-
-Flujo de ejecución típico:
-
-    Request HTTP
-        ↓
-    oauth2_scheme → extrae el token de la cookie HttpOnly access_token
-        ↓
-    get_current_user → decodifica el JWT y busca el usuario en DB
-        ↓
-    get_current_active_user → valida que el usuario esté activo
-        ↓
-    require_role([...]) → valida permisos (RBAC)
-
-Convenciones HTTP:
-    401 → No autenticado (token inválido, ausente o expirado)
-    403 → Autenticado pero sin permisos suficientes
-
-Arquitectura:
-    - Capa Core (dependencias reutilizables)
-    - Depende de:
-        * Unit of Work (acceso a datos)
-        * Seguridad (JWT)
-        * Modelo Usuario
-"""
-
 from typing import Annotated  # Permite tipado enriquecido para Depends
 
 from fastapi import Depends, HTTPException, status  # Inyección y manejo de errores HTTP
 from fastapi.security import OAuth2PasswordBearer  # Manejo estándar de OAuth2 con Bearer
 
-from app.core.security import decode_access_token  # Función para decodificar JWT
-from app.core.uow import UnitOfWork, get_uow       # Patrón Unit of Work para DB
-
-from app.modules.usuarios.model import UserPublic     # Vista pública del usuario
+from app.modules.usuarios.schemas import UserPublic
+from app.modules.usuarios.unit_of_work import UsuarioUnitOfWork
+from app.core.security import decode_access_token
 
 from fastapi import Request
 
@@ -70,7 +36,6 @@ oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="/api/v1/auth/token")
 
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],  # Token extraído automáticamente
-    uow: Annotated[UnitOfWork, Depends(get_uow)],   # Inyección del Unit of Work
 ):
     """
     Decodifica el JWT y retorna el Usuario correspondiente.
@@ -99,15 +64,11 @@ async def get_current_user(
         raise credentials_exception
 
     # Abre contexto de Unit of Work (manejo de sesión/transacción)
-    with uow:
-        # Busca el usuario en base de datos
+    with UsuarioUnitOfWork() as uow:
         user = uow.usuarios.get_by_username(username)
-
-        # Si no existe el usuario → token inválido
         if user is None:
             raise credentials_exception
-
-        return UserPublic.model_validate(user)  # Usuario autenticado válido
+        return UserPublic.model_validate(user)
 
 
 async def get_current_active_user(

@@ -5,7 +5,7 @@ Usa PostgreSQL, configurado mediante variables de entorno.
 Las pruebas reemplazan el engine que usa el Unit of Work por SQLite en memoria.
 """
 
-from sqlmodel import SQLModel, create_engine
+from sqlmodel import SQLModel, create_engine, Session
 from app.core.config import settings
 
 engine = create_engine(settings.DATABASE_URL, echo=False)
