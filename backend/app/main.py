@@ -14,21 +14,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.database import create_all_tables
+from app.core.config import settings
 from app.modules.usuarios.router import router as auth_router
 from app.modules.categorias.router import router as categorias_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Crea las tablas de BD al arrancar la aplicación."""
-    # Si PostgreSQL no está disponible, la aplicación no arranca y muestra el error.
-    # (Las pruebas no ejecutan el lifespan: usan SQLite en memoria.)
+    """Crea las tablas de BD al arrancar la aplicación"""
     create_all_tables()
     yield
 
 
 app = FastAPI(
-    title="Seguridad JWT + CRUD Categorías",
+    title="Food Store (TPI - P4)",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -36,18 +35,12 @@ app = FastAPI(
 # ─── CORS (ajustar origins en producción) ────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],  # Vite / CRA
+    allow_origins=[settings.FRONTEND_ORIGIN],  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # ─── Routers ─────────────────────────────────────────────────────────────────
-app.include_router(auth_router)
-app.include_router(categorias_router)
-
-
-# ─── Health check ────────────────────────────────────────────────────────────
-@app.get("/health", tags=["health"])
-def health():
-    return {"status": "ok", "version": "1.0.0"}
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(categorias_router, prefix="/api/v1")
