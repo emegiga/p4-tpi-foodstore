@@ -4,10 +4,10 @@
 
 **Alumno:**  Matias Higa
 
-Aplicación web para un negocio de comidas. Los clientes se registran, recorren el catálogo, arman un carrito y confirman pedidos; el admin gestiona categorías, productos, stock, pedidos y usuarios desde un panel.
+Aplicación web para un negocio de comidas. Los clientes se registran, recorren el catálogo, arman un carrito y confirman pedidos. El admin gestiona categorías, productos, stock, pedidos y usuarios desde un panel.
 
 - **Repositorio:** https://github.com/emegiga/p4-tpi-foodstore
-- **Video:** _(link a completar)_
+- **Video:** https://youtu.be/0geoujDrWfY
 
 ---
 
