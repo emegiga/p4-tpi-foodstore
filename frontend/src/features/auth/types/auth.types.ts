@@ -1,28 +1,19 @@
 export type Role = "user" | "admin";
 
-export interface UsuarioAuth {
+// Mismos campos que UserPublic en backend
+export interface Usuario {
   id: number;
-  nombre: string;
-  apellido: string;
+  username: string;
+  full_name: string;
   email: string;
-  roles: string[];
-}
-
-// lo que devuelve el backend en /auth/me y en /auth/admin/usuarios
-export interface UsuarioPublico extends UsuarioAuth {
-  celular: string | null;
-  activo: boolean;
-}
-
-export interface LoginData {
-  email: string;
-  password: string;
+  role: Role;
+  disabled: boolean;
+  created_at: string;
 }
 
 export interface RegisterData {
-  nombre: string;
-  apellido: string;
+  username: string;
+  full_name: string;
   email: string;
-  celular: string;
   password: string;
 }

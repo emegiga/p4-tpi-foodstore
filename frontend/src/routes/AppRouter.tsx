@@ -1,38 +1,46 @@
-import { Navigate, Route, Routes } from "react-router-dom";
-import { AdminUsersPage, LoginPage, RegisterPage } from "@/features/auth";
-import { CategoriesPage } from "@/features/categories";
-import { IngredientsPage } from "@/features/ingredients";
-import { ProductsPage } from "@/features/products";
-import Navbar from "@/shared/components/Navbar";
-import UnauthorizedPage from "@/shared/components/UnauthorizedPage";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import LoginPage from "@/features/auth/pages/LoginPage";
+import RegisterPage from "@/features/auth/pages/RegisterPage";
+import UnauthorizedPage from "@/features/auth/pages/UnauthorizedPage";
+import AdminCategoriasPage from "@/features/categorias/pages/AdminCategoriasPage";
+import AdminPedidosPage from "@/features/pedidos/pages/AdminPedidosPage";
+import AdminResumenPage from "@/features/pedidos/pages/AdminResumenPage";
+import AdminProductosPage from "@/features/productos/pages/AdminProductosPage";
+import CatalogoPage from "@/features/productos/pages/CatalogoPage";
+import AdminUsuariosPage from "@/features/usuarios/pages/AdminUsuariosPage";
+import AdminLayout from "@/shared/layout/AdminLayout";
+import MainLayout from "@/shared/layout/MainLayout";
 import ProtectedRoute from "./ProtectedRoute";
 
 function AppRouter() {
   return (
-    <div className="min-h-screen bg-gray-50 text-slate-800 dark:bg-gray-900 dark:text-gray-100">
-      <Navbar />
+    <BrowserRouter>
       <Routes>
-        {/* públicas */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/unauthorized" element={<UnauthorizedPage />} />
+        <Route element={<MainLayout />}>
+          {/* públicas */}
+          <Route path="/" element={<CatalogoPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-        {/* cualquier usuario autenticado */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/categories" element={<CategoriesPage />} />
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/ingredients" element={<IngredientsPage />} />
+          {/* con sesión: se agregan en el paso 6 */}
+
+          {/* solo admin */}
+          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<Navigate to="resumen" replace />} />
+              <Route path="resumen" element={<AdminResumenPage />} />
+              <Route path="categorias" element={<AdminCategoriasPage />} />
+              <Route path="productos" element={<AdminProductosPage />} />
+              <Route path="pedidos" element={<AdminPedidosPage />} />
+              <Route path="usuarios" element={<AdminUsuariosPage />} />
+            </Route>
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
-
-        {/* solo admin */}
-        <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-          <Route path="/admin/users" element={<AdminUsersPage />} />
-        </Route>
-
-        {/* otras rutas van a categorías */}
-        <Route path="*" element={<Navigate to="/categories" replace />} />
       </Routes>
-    </div>
+    </BrowserRouter>
   );
 }
 

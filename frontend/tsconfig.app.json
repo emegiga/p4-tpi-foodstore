@@ -22,7 +22,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "strict": true,
   },
-  "include": ["src", "src/shared/components/CampoTexto.tsx", "src/shared/components/DataTable.tsx", "src/shared/components/EmptyState.tsx", "src/shared/components/ErrorMessage.tsx", "src/shared/components/Loading.tsx", "src/shared/components/Modal.tsx", "src/shared/components/Navbar.tsx"]
+  "include": ["src"]
 }

@@ -9,8 +9,8 @@ interface DataTableProps<T> {
 function DataTable<T>({ table }: DataTableProps<T>) {
   return (
     <div>
-      <table className="w-full overflow-hidden rounded-lg bg-white text-left shadow dark:bg-gray-800">
-        <thead className="bg-gray-100 text-sm text-slate-700 dark:bg-gray-700 dark:text-gray-100">
+      <table className="w-full overflow-hidden rounded-lg bg-white text-left shadow">
+        <thead className="bg-gray-100 text-sm text-slate-700">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
@@ -29,7 +29,7 @@ function DataTable<T>({ table }: DataTableProps<T>) {
         </thead>
         <tbody>
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="border-t border-slate-200 dark:border-gray-700">
+            <tr key={row.id} className="border-t border-slate-200">
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id} className="px-4 py-2">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -44,7 +44,7 @@ function DataTable<T>({ table }: DataTableProps<T>) {
         <button
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
-          className="rounded bg-gray-200 px-3 py-1 hover:bg-slate-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50"
+          className="rounded bg-gray-200 px-3 py-1 hover:bg-slate-300 disabled:opacity-50"
         >
           Anterior
         </button>
@@ -54,7 +54,7 @@ function DataTable<T>({ table }: DataTableProps<T>) {
         <button
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
-          className="rounded bg-gray-200 px-3 py-1 hover:bg-slate-300 dark:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50"
+          className="rounded bg-gray-200 px-3 py-1 hover:bg-slate-300 disabled:opacity-50"
         >
           Siguiente
         </button>

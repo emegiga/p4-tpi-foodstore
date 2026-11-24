@@ -1,0 +1,4 @@
+import { QueryClient } from "@tanstack/react-query";
+
+// Instancia única de TanStack Query
+export const queryClient = new QueryClient();

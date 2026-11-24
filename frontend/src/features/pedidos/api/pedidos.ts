@@ -1,0 +1,23 @@
+import { axiosInstance } from "@/shared/api/axiosInstance";
+import type {
+  EstadoPedido,
+  FiltrosPedidos,
+  Pedido,
+  PedidosPaginados,
+  ResumenPedidos,
+} from "../types/pedido.types";
+
+export async function getPedidos(filtros: FiltrosPedidos): Promise<PedidosPaginados> {
+  const { data } = await axiosInstance.get<PedidosPaginados>("/pedidos", { params: filtros });
+  return data;
+}
+
+export async function cambiarEstadoPedido(id: number, estado: EstadoPedido): Promise<Pedido> {
+  const { data } = await axiosInstance.patch<Pedido>(`/pedidos/${id}/estado`, { estado });
+  return data;
+}
+
+export async function getResumen(): Promise<ResumenPedidos> {
+  const { data } = await axiosInstance.get<ResumenPedidos>("/pedidos/resumen");
+  return data;
+}

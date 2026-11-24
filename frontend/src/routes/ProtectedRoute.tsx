@@ -1,26 +1,21 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuthStore } from "@/features/auth";
-import type { Role } from "@/features/auth";
-import Loading from "@/shared/components/Loading";
+import type { Role } from "@/features/auth/types/auth.types";
+import { useAuthStore } from "@/store/authStore";
 
 interface ProtectedRouteProps {
-  allowedRoles?: Role[]; // sin roles: alcanza con estar autenticado
+  allowedRoles?: Role[]; // sin roles: alcanza con tener sesión
 }
 
 function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
-  const status = useAuthStore((state) => state.status);
-  const hasRole = useAuthStore((state) => state.hasRole);
+  const usuario = useAuthStore((s) => s.usuario);
+  const cargando = useAuthStore((s) => s.cargando);
 
-  // mientras se confirma la sesión con /auth/me no se redirige
-  if (status === "checking") return <Loading mensaje="Verificando sesión..." />;
+  // mientras checkSession confirma la sesión no se redirige
+  if (cargando) return <p className="py-6 text-gray-500">Verificando sesión...</p>;
 
-  // sin sesión: al login
-  if (status === "unauthenticated") {
-    return <Navigate to="/login" replace />;
-  }
+  if (!usuario) return <Navigate to="/login" replace />;
 
-  // con sesión pero sin el rol requerido
-  if (allowedRoles && !hasRole(...allowedRoles)) {
+  if (allowedRoles && !allowedRoles.includes(usuario.role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 
