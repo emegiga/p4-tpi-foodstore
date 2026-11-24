@@ -3,6 +3,7 @@ import type {
   EstadoPedido,
   FiltrosPedidos,
   Pedido,
+  PedidoCreate,
   PedidosPaginados,
   ResumenPedidos,
 } from "../types/pedido.types";
@@ -19,5 +20,15 @@ export async function cambiarEstadoPedido(id: number, estado: EstadoPedido): Pro
 
 export async function getResumen(): Promise<ResumenPedidos> {
   const { data } = await axiosInstance.get<ResumenPedidos>("/pedidos/resumen");
+  return data;
+}
+
+export async function crearPedido(pedido: PedidoCreate): Promise<Pedido> {
+  const { data } = await axiosInstance.post<Pedido>("/pedidos", pedido);
+  return data;
+}
+
+export async function cancelarPedido(id: number): Promise<Pedido> {
+  const { data } = await axiosInstance.patch<Pedido>(`/pedidos/${id}/cancelar`);
   return data;
 }

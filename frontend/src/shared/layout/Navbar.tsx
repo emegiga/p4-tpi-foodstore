@@ -14,27 +14,29 @@ function Navbar() {
   };
 
   return (
-    <nav className="bg-orange-600 text-white">
+    <nav className="bg-blue-500 text-white">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Link to="/" className="text-lg font-bold">
           Food Store
         </Link>
 
         <div className="flex items-center gap-4">
-          <Link to="/" className="hover:underline">
+          <Link to="/" className="hover:text-blue-300">
             Catálogo
           </Link>
-          <Link to="/carrito" className="hover:underline">
+          <Link to="/carrito" className="hover:text-blue-300">
             Carrito ({cantidadEnCarrito})
           </Link>
 
           {usuario ? (
             <>
-              <Link to="/mis-pedidos" className="hover:underline">
-                Mis pedidos
-              </Link>
+              {usuario.role !== "admin" && (
+                <Link to="/mis-pedidos" className="hover:text-blue-300">
+                  Mis pedidos
+                </Link>
+              )}
               {usuario.role === "admin" && (
-                <Link to="/admin/resumen" className="hover:underline">
+                <Link to="/admin/resumen" className="hover:text-blue-300">
                   Panel admin
                 </Link>
               )}
@@ -43,17 +45,17 @@ function Navbar() {
               </span>
               <button
                 onClick={cerrarSesion}
-                className="rounded bg-white px-3 py-1 text-orange-700 hover:bg-orange-100"
+                className="rounded bg-white px-3 py-1 text-blue-600 hover:bg-blue-100"
               >
                 Cerrar sesión
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="hover:underline">
+              <Link to="/login" className="hover:text-blue-300">
                 Iniciar sesión
               </Link>
-              <Link to="/register" className="hover:underline">
+              <Link to="/register" className="hover:text-blue-300">
                 Registrarse
               </Link>
             </>

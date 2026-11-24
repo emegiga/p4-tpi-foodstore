@@ -42,3 +42,15 @@ export interface FiltrosPedidos {
   limit: number;
   estado?: EstadoPedido;
 }
+
+export interface ItemPedidoCreate {
+  producto_id: number;
+  cantidad: number;
+}
+
+export interface PedidoCreate {
+  items: ItemPedidoCreate[];
+  forma_pago: FormaPago;
+  direccion_entrega: string;
+  notas: string | null;
+}

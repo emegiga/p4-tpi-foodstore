@@ -18,7 +18,7 @@ function AdminLayout() {
             key={s.to}
             to={s.to}
             className={({ isActive }) =>
-              `px-4 py-2 ${isActive ? "border-b-2 border-orange-600 font-semibold text-orange-700" : "text-gray-600"}`
+              `px-4 py-2 ${isActive ? "border-b-2 border-blue-500 font-semibold text-blue-600" : "text-gray-600"}`
             }
           >
             {s.texto}

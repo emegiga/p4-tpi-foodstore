@@ -60,7 +60,7 @@ function LoginPage() {
 
         <p className="text-sm">
           ¿No tenés cuenta?{" "}
-          <Link to="/register" className="text-orange-700 hover:underline">
+          <Link to="/register" className="text-blue-600 hover:underline">
             Registrate
           </Link>
         </p>

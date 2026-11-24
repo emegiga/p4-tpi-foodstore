@@ -5,6 +5,9 @@ import UnauthorizedPage from "@/features/auth/pages/UnauthorizedPage";
 import AdminCategoriasPage from "@/features/categorias/pages/AdminCategoriasPage";
 import AdminPedidosPage from "@/features/pedidos/pages/AdminPedidosPage";
 import AdminResumenPage from "@/features/pedidos/pages/AdminResumenPage";
+import CarritoPage from "@/features/pedidos/pages/CarritoPage";
+import CheckoutPage from "@/features/pedidos/pages/CheckoutPage";
+import MisPedidosPage from "@/features/pedidos/pages/MisPedidosPage";
 import AdminProductosPage from "@/features/productos/pages/AdminProductosPage";
 import CatalogoPage from "@/features/productos/pages/CatalogoPage";
 import AdminUsuariosPage from "@/features/usuarios/pages/AdminUsuariosPage";
@@ -22,8 +25,13 @@ function AppRouter() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
+          <Route path="/carrito" element={<CarritoPage />} />
 
-          {/* con sesión: se agregan en el paso 6 */}
+          {/* con sesión */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/mis-pedidos" element={<MisPedidosPage />} />
+          </Route>
 
           {/* solo admin */}
           <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
