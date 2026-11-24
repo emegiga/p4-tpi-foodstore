@@ -12,7 +12,6 @@ from app.modules.usuarios.unit_of_work import UsuarioUnitOfWork
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-
 def get_auth_service() -> AuthService:
     return AuthService(UsuarioUnitOfWork())
 
@@ -29,14 +28,14 @@ def login(
     service: Annotated[AuthService, Depends(get_auth_service)],
 ):
     token = service.authenticate(form_data.username, form_data.password)
-    # el token viaja solo en la cookie HttpOnly, nunca en el cuerpo
+    # el token viaja solo en la cookie HttpOnly
     response.set_cookie(
         key="access_token",
         value=token,
         httponly=True,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         samesite="lax",
-        secure=False,  # True en producción con HTTPS
+        secure=False, 
     )
     return {"message": "Login exitoso"}
 

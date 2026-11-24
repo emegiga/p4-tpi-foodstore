@@ -1,7 +1,7 @@
-from typing import Annotated  # Permite tipado enriquecido para Depends
+from typing import Annotated
 
-from fastapi import Depends, HTTPException, status  # Inyección y manejo de errores HTTP
-from fastapi.security import OAuth2PasswordBearer  # Manejo estándar de OAuth2 con Bearer
+from fastapi import Depends, HTTPException, status  # inyeccion y manejo de errores  
+from fastapi.security import OAuth2PasswordBearer   # manejo std de OAuth2 con Bearer
 
 from app.modules.usuarios.schemas import UserPublic
 from app.modules.usuarios.unit_of_work import UsuarioUnitOfWork
@@ -53,7 +53,7 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},  # Obligatorio en OAuth2 por protocolo
     )
 
-    # Decodifica el JWT → devuelve payload o None si es inválido
+    # devuelve payload / None si es inválido
     payload = decode_access_token(token)
     if payload is None:
         raise credentials_exception
@@ -109,10 +109,10 @@ def require_role(allowed_roles: list[str]):
         current_user: Annotated[UserPublic, Depends(get_current_active_user)],
     ) -> UserPublic:
         """
-        Valida que el rol del usuario esté dentro de los permitidos.
+        Valida que el rol del usuario esté dentro de los permitidos
         """
 
-        # Si el rol del usuario no está permitido → 403 (prohibido)
+        # Si el rol del usuario no está permitido lanza 403
         if current_user.role not in allowed_roles:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

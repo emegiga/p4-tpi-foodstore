@@ -1,123 +1,59 @@
-"""
-Router CRUD de Categorías.
-
-HTTP puro: parsear request, validar schema Pydantic, delegar al Service,
-serializar response con response_model. No contiene lógica de negocio.
-
-Capa: Router
-Conoce a: Service (vía UoW)
-NO conoce a: Repository, Model (solo esquemas para response_model)
-
-Regla de imports:
-    Router → Service → UoW → Repository → Model
-"""
-
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.core.uow import UnitOfWork, get_uow
-from app.core.deps import get_current_active_user
-from app.modules.usuarios.model import UserPublic
-from app.modules.categorias.model import CategoriaCreate, CategoriaUpdate, CategoriaPublic
-from app.modules.categorias.service import CategoriaService
+from app.core.deps import require_role
+from app.modules.categorias.schemas import CategoriaCreate, CategoriaRead, CategoriaUpdate
+from app.modules.categorias.service import CategoriaNoEncontrada, CategoriaService, NombreDuplicado
+from app.modules.categorias.unit_of_work import CategoriaUnitOfWork
 
-router = APIRouter(prefix="/api/v1/categorias", tags=["categorias"])
+router = APIRouter(prefix="/categorias", tags=["categorias"])
 
-
-@router.get("/", response_model=list[CategoriaPublic])
-def list_categorias(
-    # Inyección de usuario autenticado (no se usa directamente → "_" convención)
-    _user: Annotated[UserPublic, Depends(get_current_active_user)],
-
-    # Inyección del Unit of Work
-    uow: Annotated[UnitOfWork, Depends(get_uow)],
-):
-    """
-    Lista todas las categorías.
-
-    Flujo:
-    - Abre UoW (transacción)
-    - Instancia el service
-    - Delega lógica
-    - Retorna lista serializada
-    """
-
-    with uow:  # Manejo de sesión/transacción
-        service = CategoriaService(uow)  # Inyección manual del UoW
-        return service.list_all()
+solo_admin = [Depends(require_role(["admin"]))]
 
 
-@router.get("/{categoria_id}", response_model=CategoriaPublic)
-def get_categoria(
-    categoria_id: int,  # Path param
-
-    _user: Annotated[UserPublic, Depends(get_current_active_user)],
-    uow: Annotated[UnitOfWork, Depends(get_uow)],
-):
-    """
-    Obtiene una categoría por ID.
-    """
-
-    with uow:
-        service = CategoriaService(uow)
-        return service.get_by_id(categoria_id)
+def get_categoria_service() -> CategoriaService:
+    return CategoriaService(CategoriaUnitOfWork())
 
 
-@router.post(
-    "/",
-    response_model=CategoriaPublic,
-    status_code=status.HTTP_201_CREATED  # 201: recurso creado
-)
-def create_categoria(
-    cat_in: CategoriaCreate,  # Body validado por Pydantic
-
-    _user: Annotated[UserPublic, Depends(get_current_active_user)],
-    uow: Annotated[UnitOfWork, Depends(get_uow)],
-):
-    """
-    Crea una nueva categoría.
-
-    - cat_in ya llega validado
-    - No hay lógica aquí → se delega al service
-    """
-
-    with uow:
-        service = CategoriaService(uow)
-        return service.create(cat_in)
+NO_ENCONTRADA = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Categoría no encontrada")
+DUPLICADA = HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Ya existe una categoría con ese nombre")
 
 
-@router.patch("/{categoria_id}", response_model=CategoriaPublic)
-def update_categoria(
-    categoria_id: int,
-    cat_in: CategoriaUpdate,  # Input parcial (PATCH)
-
-    _user: Annotated[UserPublic, Depends(get_current_active_user)],
-    uow: Annotated[UnitOfWork, Depends(get_uow)],
-):
-    """
-    Actualiza parcialmente una categoría.
-    """
-
-    with uow:
-        service = CategoriaService(uow)
-        return service.update(categoria_id, cat_in)
+@router.get("", response_model=list[CategoriaRead])
+def listar_categorias(service: Annotated[CategoriaService, Depends(get_categoria_service)]):
+    return service.listar()
 
 
-@router.delete("/{categoria_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_categoria(
-    categoria_id: int,
+@router.get("/{categoria_id}", response_model=CategoriaRead)
+def obtener_categoria(categoria_id: int, service: Annotated[CategoriaService, Depends(get_categoria_service)]):
+    try:
+        return service.obtener(categoria_id)
+    except CategoriaNoEncontrada:
+        raise NO_ENCONTRADA
 
-    _user: Annotated[UserPublic, Depends(get_current_active_user)],
-    uow: Annotated[UnitOfWork, Depends(get_uow)],
-):
-    """
-    Elimina una categoría.
 
-    - 204 → la respuesta no tiene cuerpo
-    - Si falla, el service debería lanzar excepción
-    """
+@router.post("", response_model=CategoriaRead, status_code=status.HTTP_201_CREATED, dependencies=solo_admin)
+def crear_categoria(data: CategoriaCreate, service: Annotated[CategoriaService, Depends(get_categoria_service)]):
+    try:
+        return service.crear(data)
+    except NombreDuplicado:
+        raise DUPLICADA
 
-    with uow:
-        service = CategoriaService(uow)
-        service.delete(categoria_id)  # No retorna nada
+
+@router.put("/{categoria_id}", response_model=CategoriaRead, dependencies=solo_admin)
+def actualizar_categoria(categoria_id: int, data: CategoriaUpdate, service: Annotated[CategoriaService, Depends(get_categoria_service)]):
+    try:
+        return service.actualizar(categoria_id, data)
+    except CategoriaNoEncontrada:
+        raise NO_ENCONTRADA
+    except NombreDuplicado:
+        raise DUPLICADA
+
+
+@router.delete("/{categoria_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=solo_admin)
+def eliminar_categoria(categoria_id: int, service: Annotated[CategoriaService, Depends(get_categoria_service)]):
+    try:
+        service.eliminar(categoria_id)
+    except CategoriaNoEncontrada:
+        raise NO_ENCONTRADA

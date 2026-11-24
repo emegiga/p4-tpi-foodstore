@@ -2,7 +2,6 @@
 Engine de SQLModel.
 
 Usa PostgreSQL, configurado mediante variables de entorno.
-Las pruebas reemplazan el engine que usa el Unit of Work por SQLite en memoria.
 """
 
 from sqlmodel import SQLModel, create_engine, Session

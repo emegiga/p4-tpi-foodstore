@@ -2,10 +2,9 @@
 Entry point de la aplicación FastAPI.
 
 Responsabilidades:
-  - Registrar routers (auth + categorías).
-  - Configurar CORS para consumo desde frontend (React, etc.).
+  - Registrar los routers bajo el prefijo /api/v1.
+  - Configurar CORS con credenciales para el frontend.
   - Crear tablas al arrancar (lifespan).
-  - Health check en /health.
 """
 
 from contextlib import asynccontextmanager
@@ -17,6 +16,9 @@ from app.core.database import create_all_tables
 from app.core.config import settings
 from app.modules.auth.router import router as auth_router
 from app.modules.usuarios.router import router as usuarios_router
+from app.modules.categorias.router import router as categorias_router
+from app.modules.productos.router import router as productos_router
+from app.modules.pedidos.router import router as pedidos_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -43,3 +45,6 @@ app.add_middleware(
 # ─── Routers ─────────────────────────────────────────────────────────────────
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(usuarios_router, prefix="/api/v1")
+app.include_router(categorias_router, prefix="/api/v1")
+app.include_router(productos_router, prefix="/api/v1")
+app.include_router(pedidos_router, prefix="/api/v1")

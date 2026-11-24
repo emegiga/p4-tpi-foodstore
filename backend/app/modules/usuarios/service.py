@@ -19,6 +19,6 @@ class UsuarioService:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
             if disabled and user.id == admin_id:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No podés desactivar tu propia cuenta")
-            user.disabled = disabled  # idempotente: 200 aunque ya estuviera así
+            user.disabled = disabled  # idempotente
             uow.usuarios.update(user)
             return UserPublic.model_validate(user)

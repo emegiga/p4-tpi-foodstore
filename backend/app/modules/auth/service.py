@@ -23,7 +23,7 @@ class AuthService:
                 full_name=user_in.full_name,
                 email=user_in.email,
                 hashed_password=hash_password(user_in.password),
-                role="user",  # el registro público siempre crea "user"
+                role="user",  
             ))
             return UserPublic.model_validate(usuario)
 
@@ -31,7 +31,7 @@ class AuthService:
         with self.uow as uow:
             user = uow.usuarios.get_by_username(username)
             if not user or not verify_password(password, user.hashed_password):
-                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales incorrectas")
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciales incorrectas (user y/o clave erróneos)")
             if user.disabled:
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cuenta de usuario desactivada")
             return create_access_token(data={"sub": user.username, "role": user.role})

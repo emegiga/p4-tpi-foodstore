@@ -1,85 +1,60 @@
-"""
-Service de Categoría — lógica de negocio.
+from app.modules.categorias.models import Categoria
+from app.modules.categorias.schemas import CategoriaCreate, CategoriaRead, CategoriaUpdate
+from app.modules.categorias.unit_of_work import CategoriaUnitOfWork
 
-Stateless, orquesta operaciones sobre los repositorios a través del UoW.
-Lanza HTTPException. No hace commit/rollback directamente.
 
-Capa: Service
-Conoce a: UoW, Repository (indirectamente vía UoW)
-NO conoce a: Router
+# ─── Excepciones de dominio (el Router las traduce a HTTP) ───────────────────
 
-Regla de imports:
-    Router → Service → UoW → Repository → Model
-"""
+class CategoriaNoEncontrada(Exception):
+    pass
 
-from fastapi import HTTPException, status
 
-from app.core.uow import UnitOfWork
-from app.modules.categorias.model import Categoria, CategoriaCreate, CategoriaUpdate
+class NombreDuplicado(Exception):
+    pass
 
 
 class CategoriaService:
-    """Lógica de negocio para CRUD de categorías."""
 
-    def __init__(self, uow: UnitOfWork):
+    def __init__(self, uow: CategoriaUnitOfWork):
         self.uow = uow
 
-    def list_all(self) -> list[Categoria]:
-        """Lista todas las categorías."""
-        return self.uow.categorias.get_all()
-
-    def get_by_id(self, categoria_id: int) -> Categoria:
-        """Obtiene una categoría por ID o lanza 404."""
-        categoria = self.uow.categorias.get_by_id(categoria_id)
-        if not categoria:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Categoría no encontrada",
-            )
+    def _get_activa(self, uow: CategoriaUnitOfWork, categoria_id: int) -> Categoria:
+        categoria = uow.categorias.get_by_id(categoria_id)
+        if categoria is None or not categoria.activo:   # una categoría dada de baja se trata como inexistente
+            raise CategoriaNoEncontrada()
         return categoria
 
-    def create(self, cat_in: CategoriaCreate) -> Categoria:
-        """Crea una nueva categoría. Nombre debe ser único."""
-        if self.uow.categorias.get_by_nombre(cat_in.nombre):
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Ya existe una categoría con ese nombre",
-            )
+    def listar(self) -> list[CategoriaRead]:
+        with self.uow as uow:
+            return [CategoriaRead.model_validate(c) for c in uow.categorias.list_activas()]
 
-        categoria = Categoria.model_validate(cat_in)
-        return self.uow.categorias.add(categoria)
+    def obtener(self, categoria_id: int) -> CategoriaRead:
+        with self.uow as uow:
+            return CategoriaRead.model_validate(self._get_activa(uow, categoria_id))
 
-    def update(self, categoria_id: int, cat_in: CategoriaUpdate) -> Categoria:
-        """Actualización parcial de una categoría."""
-        categoria = self.uow.categorias.get_by_id(categoria_id)
-        if not categoria:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Categoría no encontrada",
-            )
+    def crear(self, data: CategoriaCreate) -> CategoriaRead:
+        with self.uow as uow:
+            if uow.categorias.get_by_nombre(data.nombre):
+                raise NombreDuplicado()
+            categoria = uow.categorias.add(Categoria.model_validate(data))
+            return CategoriaRead.model_validate(categoria)
 
-        update_data = cat_in.model_dump(exclude_unset=True)
+    def actualizar(self, categoria_id: int, data: CategoriaUpdate) -> CategoriaRead:
+        with self.uow as uow:
+            categoria = self._get_activa(uow, categoria_id)
+            cambios = data.model_dump(exclude_unset=True)
 
-        if "nombre" in update_data:
-            if self.uow.categorias.exists_nombre_excluding(
-                update_data["nombre"], categoria_id
-            ):
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="Ya existe una categoría con ese nombre",
-                )
+            if "nombre" in cambios:
+                otra = uow.categorias.get_by_nombre(cambios["nombre"])
+                if otra is not None and otra.id != categoria_id:
+                    raise NombreDuplicado()
 
-        for key, value in update_data.items():
-            setattr(categoria, key, value)
+            categoria.sqlmodel_update(cambios)
+            uow.categorias.update(categoria)
+            return CategoriaRead.model_validate(categoria)
 
-        return self.uow.categorias.update(categoria)
-
-    def delete(self, categoria_id: int) -> None:
-        """Elimina una categoría por ID o lanza 404."""
-        categoria = self.uow.categorias.get_by_id(categoria_id)
-        if not categoria:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Categoría no encontrada",
-            )
-        self.uow.categorias.delete(categoria)
+    def eliminar(self, categoria_id: int) -> None:
+        with self.uow as uow:
+            categoria = self._get_activa(uow, categoria_id)
+            categoria.activo = False  # baja lógica
+            uow.categorias.update(categoria)

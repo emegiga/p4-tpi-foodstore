@@ -13,7 +13,7 @@ class UnitOfWork:
     def __exit__(self, exc_type, exc_val, exc_tb):
         try:
             if exc_type is None:
-                self.session.commit()  # el único commit de la aplicación
+                self.session.commit()
             else:
                 self.session.rollback()
         finally:
